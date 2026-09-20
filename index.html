@@ -48,6 +48,12 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 .legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .legend .count{margin-left:auto;color:#8a90a0}
 
+/* ---------- 放假 / 调休提示 ---------- */
+.notices{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.notice-item{font-size:12.5px;padding:5px 11px;border-radius:8px;border:1px solid}
+.notice-item.off{background:#fff1f0;border-color:#ffccc7;color:#a8071a}
+.notice-item.mk{background:#fff7e6;border-color:#ffd591;color:#ad4e00}
+
 /* ---------- grid ---------- */
 .grid-wrap{background:#fff;border:1px solid #e4e6eb;border-radius:12px;overflow:auto;
   box-shadow:0 1px 2px rgba(16,24,40,.05)}
@@ -64,13 +70,22 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 .head small{font-weight:400;color:#8a90a0;font-size:11px}
 .head.today{background:#eef4ff;color:#2563eb}
 .head.today small{color:#6b8fe8}
+.head .mk{font-style:normal;font-size:10px;color:#ad4e00;background:#fff7e6;border-radius:4px;
+  padding:0 4px;margin-top:2px;white-space:nowrap;overflow:hidden;max-width:100%;text-overflow:ellipsis}
+.head .off{font-style:normal;font-size:10px;color:#a8071a;background:#fff1f0;border-radius:4px;padding:0 4px;margin-top:2px}
 .colbg{pointer-events:none;background:#fff}
 .colbg.today{background:#f7faff}
+.colbg.off{background:#fffafa}
+.colbg.mk{background:#fffdf7}
+.offmask{pointer-events:none;display:flex;align-items:center;justify-content:center;margin:4px;border-radius:6px;
+  background:repeating-linear-gradient(45deg,#fbfbfc,#fbfbfc 9px,#f1f2f4 9px,#f1f2f4 18px)}
+.offmask span{color:#aeb3bd;font-size:13px;font-weight:600;letter-spacing:5px}
 .card{margin:3px;padding:5px 8px;border-radius:7px;background:#fff;border:1px solid #e8eaef;
   border-left:3px solid var(--c);font-size:11.5px;line-height:1.35;overflow:hidden;
   box-shadow:0 1px 1.5px rgba(16,24,40,.05)}
 .card .course{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .who{margin-top:3px;display:flex;flex-wrap:wrap;gap:1px 7px}
+.card .room{margin-top:1px;font-size:10px;color:#8a90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .who{margin-top:2px;display:flex;flex-wrap:wrap;gap:1px 7px}
 .p{color:var(--pc);font-size:10.5px;white-space:nowrap}
 .p::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;
   background:var(--pc);margin-right:3px;vertical-align:1px}
@@ -80,6 +95,8 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 .panel .ph{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f0f1f4;flex-wrap:wrap}
 .panel .ph h2{margin:0;font-size:15px}
 .panel .ph .tag{font-size:12px;color:#2563eb;background:#eef4ff;border-radius:20px;padding:2px 10px}
+.panel .ph .tag.off{color:#a8071a;background:#fff1f0}
+.panel .ph .tag.mk{color:#ad4e00;background:#fff7e6}
 .panel .ph .right{margin-left:auto;display:flex;gap:8px}
 .dgroup{padding:10px 16px 4px;font-size:12px;color:#8a90a0;letter-spacing:1px}
 .drow{display:flex;gap:14px;padding:10px 16px;border-bottom:1px solid #f4f5f7;align-items:flex-start}
@@ -88,6 +105,7 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 .drow .t small{display:block;color:#9aa0ae;font-size:11px}
 .drow .b{flex:1;min-width:0}
 .drow .c{font-weight:600}
+.drow .room{font-size:11.5px;color:#8a90a0;margin-top:1px}
 .drow .w{display:flex;flex-wrap:wrap;gap:2px 9px;margin-top:2px}
 .drow .wk{width:88px;flex:none;text-align:right;font-size:11.5px;color:#9aa0ae}
 .empty{padding:34px 16px;text-align:center;color:#9aa0ae;font-size:13px}
@@ -132,6 +150,8 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 
   <p class="hint" id="hint" hidden></p>
 
+  <div class="notices" id="notice" hidden></div>
+
   <div class="legend" id="legend"></div>
 
   <div id="weekView">
@@ -146,8 +166,8 @@ input[type=date]:focus,button:focus-visible{outline:2px solid #bfdbfe;outline-of
 
 <script>
 "use strict";
-const DEFAULT_DATA = {"firstMonday":"2026-09-07","people":["马嘉怡","李官民","李镓浩","朱泳宣"],"slots":[{"n":1,"half":"上午","start":"8:20","end":"9:00"},{"n":2,"half":"上午","start":"9:05","end":"9:45"},{"n":3,"half":"上午","start":"10:00","end":"10:40"},{"n":4,"half":"上午","start":"10:45","end":"11:25"},{"n":5,"half":"上午","start":"11:30","end":"12:10"},{"n":1,"half":"下午","start":"14:00","end":"14:40"},{"n":2,"half":"下午","start":"14:45","end":"15:25"},{"n":3,"half":"下午","start":"15:40","end":"16:20"},{"n":4,"half":"下午","start":"16:25","end":"17:05"},{"n":5,"half":"下午","start":"17:10","end":"17:50"},{"n":1,"half":"晚上","start":"19:00","end":"19:40"},{"n":2,"half":"晚上","start":"19:45","end":"20:25"},{"n":3,"half":"晚上","start":"20:30","end":"21:10"}],"entries":[{"person":"朱泳宣","day":1,"start":1,"end":2,"weeks":[4,5,6,7,8],"course":"自然辩证法"},{"person":"朱泳宣","day":1,"start":3,"end":5,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法"},{"person":"朱泳宣","day":1,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学"},{"person":"朱泳宣","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"朱泳宣","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展"},{"person":"朱泳宣","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展"},{"person":"朱泳宣","day":3,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动"},{"person":"朱泳宣","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展"},{"person":"朱泳宣","day":4,"start":6,"end":9,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特"},{"person":"朱泳宣","day":4,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学"},{"person":"朱泳宣","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"朱泳宣","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7],"course":"实验安全"},{"person":"朱泳宣","day":5,"start":3,"end":4,"weeks":[8,9],"course":"材料热力学"},{"person":"李官民","day":1,"start":8,"end":10,"weeks":[2,3,4,5,6,7],"course":"材料化工安全"},{"person":"李官民","day":2,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动"},{"person":"李官民","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"李官民","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展"},{"person":"李官民","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展"},{"person":"李官民","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展"},{"person":"李官民","day":4,"start":6,"end":7,"weeks":[4,5,6,7,8],"course":"自然辩证法"},{"person":"李官民","day":4,"start":8,"end":10,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法"},{"person":"李官民","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"李官民","day":5,"start":1,"end":4,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特"},{"person":"李镓浩","day":1,"start":1,"end":2,"weeks":[4,5,6,7,8],"course":"自然辩证法"},{"person":"李镓浩","day":1,"start":3,"end":5,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法"},{"person":"李镓浩","day":1,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学"},{"person":"李镓浩","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"李镓浩","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展"},{"person":"李镓浩","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展"},{"person":"李镓浩","day":3,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动"},{"person":"李镓浩","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展"},{"person":"李镓浩","day":4,"start":6,"end":9,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特"},{"person":"李镓浩","day":4,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学"},{"person":"李镓浩","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理"},{"person":"李镓浩","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7],"course":"实验安全"},{"person":"李镓浩","day":5,"start":3,"end":4,"weeks":[8,9],"course":"材料热力学"},{"person":"马嘉怡","day":1,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"course":"英语"},{"person":"马嘉怡","day":2,"start":3,"end":4,"weeks":[2,3,4,5,6],"course":"科技活动"},{"person":"马嘉怡","day":2,"start":5,"end":5,"weeks":[2,3,4,5],"course":"科技活动"},{"person":"马嘉怡","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"科技活动"},{"person":"马嘉怡","day":4,"start":1,"end":4,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特"},{"person":"马嘉怡","day":4,"start":6,"end":7,"weeks":[2,3,4,5,6,7,8],"course":"工程伦理"},{"person":"马嘉怡","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7],"course":"自然辩证法"},{"person":"马嘉怡","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8],"course":"自然辩证法"},{"person":"马嘉怡","day":6,"start":3,"end":4,"weeks":[2,3,4,5,6,7,8],"course":"工程伦理"},{"person":"马嘉怡","day":7,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"course":"英语"}]};
-const LS_KEY = "tt_state_v1";
+const DEFAULT_DATA = {"firstMonday":"2026-09-07","people":["马嘉怡","李官民","李镓浩","朱泳宣"],"slots":[{"n":1,"half":"上午","start":"8:20","end":"9:00"},{"n":2,"half":"上午","start":"9:05","end":"9:45"},{"n":3,"half":"上午","start":"10:00","end":"10:40"},{"n":4,"half":"上午","start":"10:45","end":"11:25"},{"n":5,"half":"上午","start":"11:30","end":"12:10"},{"n":1,"half":"下午","start":"14:00","end":"14:40"},{"n":2,"half":"下午","start":"14:45","end":"15:25"},{"n":3,"half":"下午","start":"15:40","end":"16:20"},{"n":4,"half":"下午","start":"16:25","end":"17:05"},{"n":5,"half":"下午","start":"17:10","end":"17:50"},{"n":1,"half":"晚上","start":"19:00","end":"19:40"},{"n":2,"half":"晚上","start":"19:45","end":"20:25"},{"n":3,"half":"晚上","start":"20:30","end":"21:10"}],"entries":[{"person":"朱泳宣","day":1,"start":1,"end":2,"weeks":[4,5,6,7,8],"course":"自然辩证法","rooms":[{"w":[4,5,6,7,8],"r":"致远楼429"}]},{"person":"朱泳宣","day":1,"start":3,"end":5,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼429"}]},{"person":"朱泳宣","day":1,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼345"}]},{"person":"朱泳宣","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"朱泳宣","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展","rooms":[{"w":[2],"r":"A01116"},{"w":[4,5],"r":"A01324"}]},{"person":"朱泳宣","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展","rooms":[{"w":[3],"r":"A01116"}]},{"person":"朱泳宣","day":3,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼347"}]},{"person":"朱泳宣","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展","rooms":[{"w":[2,3,4,5,6],"r":"A01413"}]},{"person":"朱泳宣","day":4,"start":6,"end":9,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特","rooms":[{"w":[10,11,12,13,14,15,16,17,18],"r":"A01439"}]},{"person":"朱泳宣","day":4,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼345"}]},{"person":"朱泳宣","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"朱泳宣","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7],"course":"实验安全","rooms":[{"w":[2,3,4,5,6,7],"r":"致远楼347"}]},{"person":"朱泳宣","day":5,"start":3,"end":4,"weeks":[8,9],"course":"材料热力学","rooms":[{"w":[8,9],"r":"致远楼345"}]},{"person":"李官民","day":1,"start":8,"end":10,"weeks":[2,3,4,5,6,7],"course":"材料化工安全","rooms":[{"w":[2,3,4,5,6,7],"r":"致远楼345"}]},{"person":"李官民","day":2,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼416"}]},{"person":"李官民","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"李官民","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展","rooms":[{"w":[2],"r":"A01116"},{"w":[4,5],"r":"A01324"}]},{"person":"李官民","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展","rooms":[{"w":[3],"r":"A01116"}]},{"person":"李官民","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展","rooms":[{"w":[2,3,4,5,6],"r":"A01413"}]},{"person":"李官民","day":4,"start":6,"end":7,"weeks":[4,5,6,7,8],"course":"自然辩证法","rooms":[{"w":[4,5,6,7,8],"r":"致远楼416"}]},{"person":"李官民","day":4,"start":8,"end":10,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼429"}]},{"person":"李官民","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"李官民","day":5,"start":1,"end":4,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特","rooms":[{"w":[10,11,12,13,14,15,16,17,18],"r":"A01314"}]},{"person":"李镓浩","day":1,"start":1,"end":2,"weeks":[4,5,6,7,8],"course":"自然辩证法","rooms":[{"w":[4,5,6,7,8],"r":"致远楼429"}]},{"person":"李镓浩","day":1,"start":3,"end":5,"weeks":[3,4,5,6,7,8,9],"course":"自然辩证法","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼429"}]},{"person":"李镓浩","day":1,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼345"}]},{"person":"李镓浩","day":2,"start":6,"end":7,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"李镓浩","day":2,"start":9,"end":10,"weeks":[2,4,5],"course":"材料新进展","rooms":[{"w":[2],"r":"A01116"},{"w":[4,5],"r":"A01324"}]},{"person":"李镓浩","day":3,"start":1,"end":2,"weeks":[3],"course":"材料新进展","rooms":[{"w":[3],"r":"A01116"}]},{"person":"李镓浩","day":3,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8,9],"course":"科技活动","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼347"}]},{"person":"李镓浩","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"材料新进展","rooms":[{"w":[2,3,4,5,6],"r":"A01413"}]},{"person":"李镓浩","day":4,"start":6,"end":9,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特","rooms":[{"w":[10,11,12,13,14,15,16,17,18],"r":"A01439"}]},{"person":"李镓浩","day":4,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9],"course":"材料热力学","rooms":[{"w":[2,3,4,5,6,7,8,9],"r":"致远楼345"}]},{"person":"李镓浩","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7,8,9],"course":"工程伦理","rooms":[{"w":[3,4,5,6,7,8,9],"r":"致远楼346"}]},{"person":"李镓浩","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7],"course":"实验安全","rooms":[{"w":[2,3,4,5,6,7],"r":"致远楼347"}]},{"person":"李镓浩","day":5,"start":3,"end":4,"weeks":[8,9],"course":"材料热力学","rooms":[{"w":[8,9],"r":"致远楼345"}]},{"person":"马嘉怡","day":1,"start":8,"end":9,"weeks":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"course":"英语","rooms":[{"w":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"r":"致远楼347"}]},{"person":"马嘉怡","day":2,"start":3,"end":4,"weeks":[2,3,4,5,6],"course":"科技活动","rooms":[{"w":[2,3,4,5,6],"r":"致远楼346"}]},{"person":"马嘉怡","day":2,"start":5,"end":5,"weeks":[2,3,4,5],"course":"科技活动","rooms":[{"w":[2,3,4,5],"r":"致远楼346"}]},{"person":"马嘉怡","day":3,"start":6,"end":7,"weeks":[2,3,4,5,6],"course":"科技活动","rooms":[{"w":[2,3,4,5,6],"r":"致远楼346"}]},{"person":"马嘉怡","day":4,"start":1,"end":4,"weeks":[10,11,12,13,14,15,16,17,18],"course":"新中特","rooms":[{"w":[10,11,12,13,14,15,16,17,18],"r":"A01422"}]},{"person":"马嘉怡","day":4,"start":6,"end":7,"weeks":[2,3,4,5,6,7,8],"course":"工程伦理","rooms":[{"w":[2,3,4,5,6,7,8],"r":"致远楼414"}]},{"person":"马嘉怡","day":5,"start":1,"end":2,"weeks":[3,4,5,6,7],"course":"自然辩证法","rooms":[{"w":[3,4,5,6,7],"r":"致远楼416"}]},{"person":"马嘉怡","day":5,"start":3,"end":5,"weeks":[2,3,4,5,6,7,8],"course":"自然辩证法","rooms":[{"w":[2,3,4,5,6,7,8],"r":"致远楼416"}]},{"person":"马嘉怡","day":6,"start":3,"end":4,"weeks":[2,3,4,5,6,7,8],"course":"工程伦理","rooms":[{"w":[2,3,4,5,6,7,8],"r":"致远楼414"}]},{"person":"马嘉怡","day":7,"start":11,"end":12,"weeks":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"course":"英语","rooms":[{"w":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"r":"致远楼347"}]}],"holidays":[{"from":"2026-09-25","to":"2026-10-07","name":"中秋节、国庆节假期"}],"makeups":[{"date":"2026-09-20","target":"2026-10-06"},{"date":"2026-10-10","target":"2026-10-07"},{"date":"2026-10-17","target":"2026-09-28"},{"date":"2026-10-24","target":"2026-09-29"},{"date":"2026-10-31","target":"2026-09-30"}]};
+const LS_KEY = "tt_state_v2";
 const THEME = ["#e11d48","#0891b2","#7c3aed","#ea580c","#059669","#d97706","#2563eb","#db2777"];
 const DAYN = ["周一","周二","周三","周四","周五","周六","周日"];
 const $ = s => document.querySelector(s);
@@ -219,16 +239,46 @@ function slotLabel(slots, g){
   const a = slots[g.start-1], b = slots[g.end-1];
   return a.n + (g.end > g.start ? "-" + b.n : "") + " 节";
 }
+/* ============ 放假 / 调休 ============ */
+function specialOf(date){
+  const key = fmt(date);
+  const h = (STATE.holidays || []).find(x => key >= x.from && key <= x.to);
+  if(h) return {type:"holiday", name:h.name};
+  const m = (STATE.makeups || []).find(x => x.date === key);
+  if(m) return {type:"makeup", target:m.target};
+  return null;
+}
+
+/* 某一天实际上什么课：放假日无课；调休日上 target 那天（连同其所在周次）的课 */
+function effectiveDay(date){
+  const sp = specialOf(date);
+  if(sp && sp.type === "holiday")
+    return {special:sp, week:weekOf(date), day:dayIdx(date), courses:[]};
+  const src = (sp && sp.type === "makeup") ? parseYMD(sp.target) : date;
+  const w = weekOf(src), d = dayIdx(src);
+  return {special:sp, src:src, week:w, day:d,
+          courses: STATE.entries.filter(e => e.day === d && e.weeks.includes(w))};
+}
+
+/* 某课程段在第 week 周的上课地点（同一门课不同周次可能换教室） */
+function roomForWeek(e, week){
+  if(!e.rooms) return "";
+  return [...new Set(e.rooms.filter(r => r.w.includes(week)).map(r => r.r))].join(" / ");
+}
+
 /* ============ 布局：同一天内把课程段分配到子列 ============ */
-function layoutDay(list){
+function layoutDay(list, week){
   const map = new Map();
   for(const e of list){
     const k = e.course+"|"+e.start+"|"+e.end;
     let g = map.get(k);
-    if(!g){ g = {course:e.course, start:e.start, end:e.end, people:[], weeks:e.weeks}; map.set(k,g); }
+    if(!g){ g = {course:e.course, start:e.start, end:e.end, people:[], weeks:e.weeks, rooms:new Set()}; map.set(k,g); }
     if(!g.people.includes(e.person)) g.people.push(e.person);
+    const r = roomForWeek(e, week);
+    if(r) g.rooms.add(r);
   }
   const groups = [...map.values()];
+  groups.forEach(g => { g.room = [...g.rooms].join(" / "); });
   const order = STATE.people;
   groups.forEach(g => g.people.sort((a,b)=>order.indexOf(a)-order.indexOf(b)));
   groups.sort((a,b)=> a.start-b.start || b.end-a.end);
@@ -263,7 +313,37 @@ function renderWeek(w){
   $("#brandSub").textContent = STATE.people.length + " 位同学 · 本周共 " + valid.length + " 段课程 · " + perPerson;
 
   renderLegend();
+  renderNotices(monday);
   renderGrid(w, monday, today);
+}
+
+/* 顶部提示：本周涉及的放假与调休 */
+function renderNotices(monday){
+  const box = $("#notice");
+  const days = [...Array(7)].map((_,k)=>addDays(monday,k));
+  const lines = [];
+  for(let i=0; i<7; i++){
+    const sp = specialOf(days[i]);
+    if(!sp || sp.type !== "holiday") continue;
+    let j = i;
+    while(j+1 < 7 && (specialOf(days[j+1])||{}).type === "holiday") j++;
+    const a = days[i], b = days[j];
+    lines.push({cls:"off", text: sameDay(a,b)
+      ? "放假：" + md(a) + "（" + DAYN[i] + "）"
+      : "放假：" + md(a) + "（" + DAYN[i] + "）— " + md(b) + "（" + DAYN[j] + "）"});
+    i = j;
+  }
+  days.forEach((dt,k)=>{
+    const sp = specialOf(dt);
+    if(sp && sp.type === "makeup"){
+      const t = parseYMD(sp.target);
+      lines.push({cls:"mk", text: "调休：" + md(dt) + "（" + DAYN[k] + "）补 "
+        + (t.getMonth()+1) + "月" + t.getDate() + "日（" + DAYN[dayIdx(t)-1] + "）的课程"});
+    }
+  });
+  if(!lines.length){ box.hidden = true; box.innerHTML = ""; return; }
+  box.hidden = false;
+  box.innerHTML = lines.map(l => '<span class="notice-item ' + l.cls + '">' + esc(l.text) + "</span>").join("");
 }
 
 function renderLegend(){
@@ -284,17 +364,23 @@ function renderGrid(w, monday, today){
   const SL = STATE.slots;
   grid.innerHTML = "";
 
-  const layouts = {};
+  const layouts = {}, dayEff = {};
   let N = 1;
   for(let d=1; d<=7; d++){
-    layouts[d] = layoutDay(STATE.entries.filter(e => e.day===d && e.weeks.includes(w)));
+    const eff = effectiveDay(addDays(monday, d-1));
+    dayEff[d] = eff;
+    layouts[d] = layoutDay(eff.courses, eff.week);
     if(layouts[d].ncols > N) N = layouts[d].ncols;
   }
   grid.style.gridTemplateColumns = "26px 62px repeat(" + (7*N) + ", minmax(78px,1fr))";
-  grid.style.gridTemplateRows = "auto repeat(" + SL.length + ", 52px)";
+  grid.style.gridTemplateRows = "auto repeat(" + SL.length + ", 54px)";
 
   for(let d=1; d<=7; d++){
-    const bg = el("div","colbg" + (sameDay(addDays(monday,d-1), today) ? " today" : ""));
+    const dt = addDays(monday, d-1), sp = dayEff[d].special;
+    let cls = "colbg";
+    if(sameDay(dt, today)) cls += " today";
+    if(sp) cls += sp.type === "holiday" ? " off" : " mk";
+    const bg = el("div", cls);
     bg.style.gridColumn = (3+(d-1)*N) + " / span " + N;
     bg.style.gridRow = "2 / span " + SL.length;
     grid.appendChild(bg);
@@ -307,8 +393,19 @@ function renderGrid(w, monday, today){
 
   for(let d=1; d<=7; d++){
     const dt = addDays(monday, d-1);
-    const h = el("div","head" + (sameDay(dt,today) ? " today" : ""));
-    h.innerHTML = "<span>" + DAYN[d-1] + "</span><small>" + md(dt) + "</small>";
+    const sp = dayEff[d].special;
+    let cls = "head";
+    if(sameDay(dt,today)) cls += " today";
+    if(sp) cls += " sp";
+    const h = el("div", cls);
+    let inner = "<span>" + DAYN[d-1] + "</span><small>" + md(dt) + "</small>";
+    if(sp && sp.type === "makeup"){
+      const t = parseYMD(sp.target);
+      inner += '<em class="mk">补 ' + md(t) + " " + DAYN[dayIdx(t)-1] + " 课</em>";
+    } else if(sp && sp.type === "holiday"){
+      inner += '<em class="off">放假</em>';
+    }
+    h.innerHTML = inner;
     h.style.gridColumn = (3+(d-1)*N) + " / span " + N;
     h.style.gridRow = "1";
     grid.appendChild(h);
@@ -333,15 +430,25 @@ function renderGrid(w, monday, today){
   });
 
   for(let d=1; d<=7; d++){
+    if((dayEff[d].special||{}).type !== "holiday") continue;
+    const mask = el("div","offmask");
+    mask.innerHTML = "<span>放 假</span>";
+    mask.style.gridColumn = (3+(d-1)*N) + " / span " + N;
+    mask.style.gridRow = "2 / span " + SL.length;
+    grid.appendChild(mask);
+  }
+
+  for(let d=1; d<=7; d++){
     for(const g of layouts[d].groups){
       const card = el("div","card");
       card.style.setProperty("--c", colorOf(g.people[0]));
       card.style.gridColumn = String(3+(d-1)*N+g.col);
       card.style.gridRow = (2+g.start-1) + " / span " + (g.end-g.start+1);
-      card.title = g.course + " · " + g.people.join("、") + " · 第 " + weeksLabel(g.weeks) + " 周";
-      card.innerHTML = '<div class="course">' + esc(g.course) + '</div><div class="who">' +
-        g.people.map(p => '<span class="p" style="--pc:' + colorOf(p) + '">' + esc(p) + '</span>').join("") +
-        '</div>';
+      card.title = g.course + (g.room ? " · " + g.room : "") + " · "
+        + g.people.join("、") + " · 第 " + weeksLabel(g.weeks) + " 周";
+      card.innerHTML = '<div class="course">' + esc(g.course) + "</div>"
+        + (g.room ? '<div class="room">' + esc(g.room) + "</div>" : "")
+        + '<div class="who">' + g.people.map(p => '<span class="p" style="--pc:' + colorOf(p) + '">' + esc(p) + '</span>').join("") + "</div>";
       grid.appendChild(card);
     }
   }
@@ -351,10 +458,10 @@ function renderGrid(w, monday, today){
 function renderDateView(dateStr){
   const d = parseYMD(dateStr);
   if(!d){ toast("日期格式不正确"); return; }
+  const eff = effectiveDay(d), sp = eff.special;
   const w = weekOf(d), di = dayIdx(d);
-  const list = STATE.entries
-    .filter(e => e.day===di && e.weeks.includes(w))
-    .sort((a,b)=> a.start-b.start || b.end-a.end);
+  const list = eff.courses.slice().sort((a,b)=> a.start-b.start || b.end-a.end);
+  renderNotices(mondayOfWeek(w));
 
   const box = $("#dateView");
   box.innerHTML = "";
@@ -362,8 +469,16 @@ function renderDateView(dateStr){
 
   const ph = el("div","ph");
   const inRange = w >= 1 && w <= maxWeek();
-  ph.innerHTML = "<h2>" + zhDate(d) + " 星期" + "一二三四五六日"[di-1] + "</h2>" +
+  let head = "<h2>" + zhDate(d) + " 星期" + "一二三四五六日"[di-1] + "</h2>" +
     '<span class="tag">' + (inRange ? "第 " + w + " 周" : "第 " + w + " 周（学期周次范围外）") + "</span>";
+  if(sp && sp.type === "holiday")
+    head += '<span class="tag off">放假 · ' + esc(sp.name) + "</span>";
+  if(sp && sp.type === "makeup"){
+    const t = parseYMD(sp.target);
+    head += '<span class="tag mk">调休上课：补 ' + (t.getMonth()+1) + "月" + t.getDate() + "日（"
+      + DAYN[dayIdx(t)-1] + "）的课程 · 按第 " + eff.week + " 周课表</span>";
+  }
+  ph.innerHTML = head;
   const right = el("div","right");
   const back = el("button", null); back.textContent = "← 返回本周课表";
   const cur = el("button","primary"); cur.textContent = "看今天的课";
@@ -371,19 +486,22 @@ function renderDateView(dateStr){
   right.appendChild(cur); right.appendChild(back);
   ph.appendChild(right);
   panel.appendChild(ph);
-  back.onclick = ()=>{ box.hidden = true; $("#weekView").hidden = false; };
+  back.onclick = ()=>{ box.hidden = true; $("#weekView").hidden = false; renderWeek(curWeek); };
 
   if(!list.length){
     const e = el("div","empty");
-    e.textContent = inRange ? "这一天没有课 🎉" : "这一天不在学期周次范围内，没有课程安排。";
+    if(sp && sp.type === "holiday") e.textContent = "（放假）" + sp.name + "，当天没有课。";
+    else e.textContent = inRange ? "这一天没有课 🎉" : "这一天不在学期周次范围内，没有课程安排。";
     panel.appendChild(e);
   } else {
     const groups = new Map();
     for(const e of list){
       const k = e.course + "|" + e.start + "|" + e.end;
       let g = groups.get(k);
-      if(!g){ g = {course:e.course, start:e.start, end:e.end, people:[], weeks:e.weeks}; groups.set(k,g); }
+      if(!g){ g = {course:e.course, start:e.start, end:e.end, people:[], weeks:e.weeks, rooms:new Set()}; groups.set(k,g); }
       if(!g.people.includes(e.person)) g.people.push(e.person);
+      const r = roomForWeek(e, eff.week);
+      if(r) g.rooms.add(r);
     }
     const arr = [...groups.values()].sort((a,b)=>a.start-b.start);
     let lastHalf = null;
@@ -395,10 +513,11 @@ function renderDateView(dateStr){
       }
       const row = el("div","drow");
       const a = STATE.slots[g.start-1], b = STATE.slots[g.end-1];
+      const room = [...g.rooms].join(" / ");
       row.innerHTML = '<div class="t">' + slotLabel(STATE.slots, g) + "<small>" + a.start + "-" + b.end + "</small></div>" +
-        '<div class="b"><div class="c">' + esc(g.course) + '</div><div class="w">' +
-        g.people.map(p => '<span class="p" style="--pc:' + colorOf(p) + '">' + esc(p) + '</span>').join("") +
-        '</div></div>' +
+        '<div class="b"><div class="c">' + esc(g.course) + "</div>" +
+        (room ? '<div class="room">' + esc(room) + "</div>" : "") +
+        '<div class="w">' + g.people.map(p => '<span class="p" style="--pc:' + colorOf(p) + '">' + esc(p) + '</span>').join("") + "</div></div>" +
         '<div class="wk">第 ' + weeksLabel(g.weeks) + " 周</div>";
       panel.appendChild(row);
     }
@@ -636,7 +755,9 @@ function applyData(data, srcName){
     firstMonday: data.firstMonday,
     people: data.people && data.people.length ? data.people : [...new Set(data.entries.map(e=>e.person))],
     slots: data.slots,
-    entries: data.entries
+    entries: data.entries,
+    holidays: data.holidays || STATE.holidays || [],
+    makeups: data.makeups || STATE.makeups || []
   };
   saveState();
   $("#firstMonday").value = STATE.firstMonday;
