@@ -459,6 +459,7 @@ function renderDateView(dateStr){
   const eff = effectiveDay(d), sp = eff.special;
   const w = weekOf(d), di = dayIdx(d);
   const list = eff.courses.slice().sort((a,b)=> a.start-b.start || b.end-a.end);
+  renderLegend();                      // 与 HIDDEN 同步，否则日期视图下切换显示/隐藏会失效
   renderNotices(mondayOfWeek(w));
 
   const box = $("#dateView");
